@@ -900,15 +900,17 @@ public class IndexController{//不再让IndexController实现Controller接口
   >
   >-  file.getImage().transferTo(newFile);
   >
-  >  - ```java
-  >    /*	Transfer treceived file to the given destination file.
-  >    	@param dest the destination file (typically absolute)
-  >     */
-  >    ```
+  > - ```java
+  >  /*	Transfer treceived file to the given destination file.
+  >  @param dest the destination file (typically absolute)
+  >  */
+  >  ```
+  >```
   >
-  >  - 复制文件，若是没有这一行，之前的文件是一个空的文件（内容为空),把对象file中的文件复制给newFile
+  > - 复制文件，若是没有这一行，之前的文件是一个空的文件（内容为空),把对象file中的文件复制给newFile
   >
   >- 把生成的随机的文件名提交给视图
+  >```
 
 ```java
 package controller;

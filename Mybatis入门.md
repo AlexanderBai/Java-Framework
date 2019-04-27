@@ -1977,6 +1977,10 @@ public class Do {
 >```
 >
 >```
+>
+>```
+>
+>```
 
 ```java
 package com.alexanderbai.test;
@@ -3335,8 +3339,6 @@ public class Do {
   </configuration>
   ```
 
-  
-
 - 测试
 
   ```java
@@ -3412,6 +3414,292 @@ public class Do {
   ```
 
 ###四、相关概念
+
+#### 1、Mybatis日志
+
+>- 在之前的知识中，点击运行，之后就是显示结果，运行的过程（或说是运行了什么）对我们是**透明**的，因此需要打印日志，记录运行的情况，以便调试
+>
+>- 而`Mybatis`自身没有打印日志的功能，故使用第三方日志
+
+
+
+- 项目目录
+
+![1556199357766](assets/1556199357766.png)
+
+- JAR包
+
+  ![1556199404767](assets/1556199404767.png)
+
+- 实体类
+
+```java
+package com.alexanderbai.pojo;
+
+public class Category {
+	private int id;
+	private String name;
+	public int getId() {
+		return id;
+	}
+	public void setId(int id) {
+		this.id = id;
+	}
+	public String getName() {
+		return name;
+	}
+	public void setName(String name) {
+		this.name = name;
+	}	
+}
+```
+
+- 实体类映射SQL语句
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+	PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+	"http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alexanderbai.pojo">
+	    <insert id="addCategory" parameterType="Category" >
+	        insert into category_ ( name ) values (#{name})    
+	    </insert>
+	    
+	    <delete id="deleteCategory" parameterType="Category" >
+	        delete from category_ where id= #{id}   
+	    </delete>
+	    
+	    <select id="getCategory" parameterType="_int" resultType="Category">
+	        select * from   category_  where id= #{id}    
+	    </select>
+
+	    <update id="updateCategory" parameterType="Category" >
+	        update category_ set name=#{name} where id=#{id}    
+	    </update>
+
+	    <select id="listCategory" resultType="Category">
+	        select * from   category_      
+	    </select>  
+</mapper>
+```
+
+- Mapper接口
+
+```java
+package com.alexanderbai.mapper;
+ 
+import java.util.List;
+
+import com.alexanderbai.pojo.Category;
+import org.apache.ibatis.annotations.DeleteProvider;
+import org.apache.ibatis.annotations.InsertProvider;
+import org.apache.ibatis.annotations.SelectProvider;
+import org.apache.ibatis.annotations.UpdateProvider;
+
+import com.alexanderbai.CategoryDynaSqlProvider;
+
+public interface CategoryMapper {
+ 
+    @InsertProvider(type=CategoryDynaSqlProvider.class,method="add")  
+    public int add(Category category);
+       
+  
+	@DeleteProvider(type=CategoryDynaSqlProvider.class,method="delete")
+    public void delete(int id);  
+       
+    @SelectProvider(type=CategoryDynaSqlProvider.class,method="get")  
+    public Category get(int id);  
+     
+    @UpdateProvider(type=CategoryDynaSqlProvider.class,method="update")  
+    public int update(Category category);   
+       
+    @SelectProvider(type=CategoryDynaSqlProvider.class,method="list")      
+    public List<Category> list();  
+}
+```
+
+- 日志类
+
+```properties
+# Global logging configuration
+log4j.rootLogger=ERROR, stdout
+# MyBatis logging configuration...
+log4j.logger.com.alexanderbai=TRACE
+# Console output...
+log4j.appender.stdout=org.apache.log4j.ConsoleAppender
+log4j.appender.stdout.layout=org.apache.log4j.PatternLayout
+log4j.appender.stdout.layout.ConversionPattern=%5p [%t] - %m%n
+```
+
+**[log4j学习笔记](https://github.com/AlexanderBai/Learn-Tool.git)**
+
+- 动态SQL类
+
+```java
+package com.alexanderbai;
+
+import org.apache.ibatis.jdbc.SQL;
+
+public class CategoryDynaSqlProvider {
+
+	public String list() {
+		 return new SQL()
+				 .SELECT("*")
+				 .FROM("category_")
+				 .toString();
+		
+	}
+
+	public String get() {
+		return new SQL()
+				.SELECT("*")
+				.FROM("category_")
+				.WHERE("id=#{id}")
+				.toString();
+	}
+	
+	public String add(){
+		return new SQL()
+				.INSERT_INTO("category_")
+				.VALUES("name", "#{name}")
+				.toString();
+	}
+
+	public String update(){
+		return new SQL()
+				.UPDATE("category_")
+				.SET("name=#{name}")
+				.WHERE("id=#{id}")
+				.toString();
+	}
+
+	public String delete(){
+		return new SQL()
+				.DELETE_FROM("category_")
+				.WHERE("id=#{id}")
+				.toString();
+	}
+}
+```
+
+- Mybatis配置文件
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+"http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <typeAliases>
+      <package name="com.alexanderbai.pojo"/>
+    </typeAliases>
+
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+            <property name="driver" value="com.mysql.jdbc.Driver"/>
+            <property name="url" value="jdbc:mysql://localhost:3306/test?characterEncoding=UTF-8"/>
+            <property name="username" value="root"/>
+            <property name="password" value="ROOT"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <mapper resource="com/alexanderbai/pojo/Category.xml"/>
+        <mapper class="com.alexanderbai.mapper.CategoryMapper"/>
+    </mappers>
+</configuration>
+```
+
+- 测试
+
+```java
+package com.alexanderbai;
+  
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+
+import com.alexanderbai.mapper.CategoryMapper;
+import com.alexanderbai.pojo.Category;
+import org.apache.ibatis.io.Resources;
+import org.apache.ibatis.session.SqlSession;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.apache.ibatis.session.SqlSessionFactoryBuilder;
+
+public class TestMybatis {
+  
+    public static void main(String[] args) throws IOException {
+        String resource = "mybatis-config.xml";
+        InputStream inputStream = Resources.getResourceAsStream(resource);
+        SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(inputStream);
+        SqlSession session = sqlSessionFactory.openSession();
+        CategoryMapper mapper = session.getMapper(CategoryMapper.class);
+ 
+//        add(mapper);
+//        delete(mapper);
+//        get(mapper);
+//        update(mapper);
+        listAll(mapper);
+             
+        session.commit();
+        session.close();
+  
+    }
+ 
+    private static void update(CategoryMapper mapper) {
+        Category c= mapper.get(14);
+        c.setName("修改了的Category名爵");
+        mapper.update(c);
+        listAll(mapper);
+    }
+ 
+    private static void get(CategoryMapper mapper) {
+        Category c= mapper.get(14);
+        System.out.println(c.getName());
+    }
+ 
+    private static void delete(CategoryMapper mapper) {
+        mapper.delete(13);
+        listAll(mapper);
+    }
+ 
+    private static void add(CategoryMapper mapper) {
+        Category c = new Category();
+        c.setName("新增加的Category");
+        mapper.add(c);
+        listAll(mapper);
+    }
+  
+    private static void listAll(CategoryMapper mapper) {
+        List<Category> cs = mapper.list();
+        for (Category c : cs) {
+            System.out.println(c.getName());
+        }
+    }
+}
+```
+
+- 运行效果
+
+  ![1556199699270](assets/1556199699270.png)
+
+  可以从上看出
+
+  - 执行了那一个SQL语句（第一行）
+  - 参数（第二行）
+  - 表的信息（第三行，如id和name）456行对应的就是各个字段的id和name的值
+  - 操作的次数（第七行，就是说`SELECT * FROM category_ `在本次查询中总共操作了三次
+  - 最后是操作后的结果集
+
+####2、事务管理
+
+
 
 
 

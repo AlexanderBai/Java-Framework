@@ -47,7 +47,7 @@ package bank;
 public class PageReportGenerator implements ReportGenerator {
 	public void generate(String[][] table) {
 		System.out.println("假设这是一个日志:PageReportGenerator.generate方法开始执行！");
-		System.out.println("这个部分是打印报表，以便工作人员装进信封邮寄给客户");
+		System.out.println("这个部分是打印报表，以便工作人员以短信方式给客户");
 		System.out.println("假设这是一个日志:PageReportGenerator.generate方法执行完成！");
 	}
 }
@@ -157,7 +157,7 @@ public class PageReportGenerator implements ReportGenerator {
   public class SMSReportGenerator implements ReportGenerator {
   
   	public void generate(String[][] table) {
-  		System.out.println("这个部分时发送信息，客户可以通过短信得知某月消费信息");
+  		System.out.println("这个部分时发送信息，客户可以通过邮件得知某月消费信息");
   	}
   }
   ```
@@ -206,7 +206,7 @@ public class PageReportGenerator implements ReportGenerator {
   >
   >- 实例化一个`SMSReportGenerator`对象
   >- 实例化一个`ReportService`对象
-  >  - 把`SMSReportGenerator`对象赋值给`ReportService`中的`reportGenerator`属性,w完成依赖注入
+  >  - 把`SMSReportGenerator`对象赋值给`ReportService`中的`reportGenerator`属性,完成依赖注入
 
 - Main
 
@@ -418,7 +418,6 @@ public class Category {
     public void setName(String name) {
         this.name = name;
     }
-
 }
 ```
 
@@ -726,7 +725,7 @@ import org.springframework.stereotype.Component;
  * @Vision 1.0.0
  */
 @Aspect   //表示这是一个切面
-@Component//表示这是一个bean，有Spring进行管理
+@Component//表示这是一个bean，由Spring进行管理
 public class LoggerAspect {
     
     //表示对com.alexanderbai.service.ProductService这个类中的所有方法进行切面操作
@@ -897,15 +896,14 @@ public class TestSpring {
 ```
 
 >- <font color=red>@RunWith(SpringJUnit4ClassRunner.class):</font>表示这是一个Spring的测试类
->- <font color=red>@RunWith(SpringJUnit4ClassRunner.class)：</font>定位Spring配置文件
->- <font color=red>@RunWith(SpringJUnit4ClassRunner.class)：</font>给这个测试类装配Category对象
+>- <font color=red>@ContextConfiguration("classpath:applicationContext.xml")：</font>定位Spring配置文件
+>- <font color=red> @Autowired：</font>给这个测试类装配Category对象
 
 
 
 
 
 <hr>
-
 [ 以上学习笔记借鉴自Day](https://my.oschina.net/myriads/blog/37922)
 
 [以上学习笔记借鉴自how2j.cn](http://how2j.cn/k/spring/spring-ioc-di/87.html#nowhere)

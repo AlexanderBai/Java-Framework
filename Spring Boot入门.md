@@ -1,4 +1,4 @@
-
+****
 
 ##一、基础
 
@@ -457,29 +457,27 @@ Hi JSP. 现在时间是  ${now}
 - 在application.properties中添加以下内容
 
   ```properties
-#缓存
+  #热部署
+  #1、缓存
   spring.thymeleaf.cache=true        
-#开启热部署
+  #2、开启热部署
   spring.devtools.restart.enabled=true   
-  #监听目录，也就是会监听指定目录下文件的变动
-  spring.devtools.restart.additional-paths=src/main/java 
+  #3、监听目录,也就是会监听指定目录下文件的变动
+  spring.devtools.restart.additional-paths=src/main/java  
   ```
-  
-  - **运行，在运行过程中修改控制器，可以观察到控制台自动重启**
-  
-  
+- **运行，在运行过程中修改控制器，可以观察到控制台自动重启**
+
+
 
 #### 6、Spring Boot全局错误处理
+
+①在控制器中增加代码，是程序一定会出错
 
 - 修改控制器，使访问一定能产生一个错误（为了便于演示）
 - 增加一个全局异常处理器
 - 增加一个用于显示异常信息的jsp页面
 
-
-
-①在控制器中增加代码，是程序一定会出错
-
-```java
+  ```java
 package com.alexanderbai.springboot.web;
 
 import org.springframework.stereotype.Controller;
@@ -505,7 +503,7 @@ public class HelloController {
         return "hello";
     }
 }
-```
+  ```
 
 ②新建GlobalExceptionHandler类，用于处理全局错误
 
@@ -641,8 +639,6 @@ server.servlet.context-path=/test
   G:\program\Java\IDEA\practice\springboot>mvn install
   ```
 
-  
-
 - 运行java命令
 
   ```
@@ -659,7 +655,7 @@ server.servlet.context-path=/test
 
 ####9、Spring Boot yml文件
 
-（这小节了解看得懂即可）
+（这小节s了解看得懂即可）
 
 在Spring Boot除了可以使用.properties配置文件外，Spring Boot还支持yml格式
 
@@ -681,19 +677,577 @@ server:
 
 
 
-
-
-
-
-​	
-
-
-
-
-
 ##二、持久层支持
 
+#### 1、Spring Boot JPA
 
+- JPA的概念
+- 创建数据库、表、字段
+- 修改application.properties
+- 在pom.xml中添加依赖
+- 新建一个实体类
+- 新建DAO接口
+- 新建对应的控制器
+- 视图页面
+- 测试
+
+
+
+①JPA的概念
+
+- JPA（Java Persistence API）：由Sun官方提出的Java持久化规范，也就是帮助开发人员操作数据库。默认使用的是Hibernate
+- 在实际开发中，真正干活的是实现了JPA规范的框架，如Mybatis
+- 通俗地说，JPA是官方给的规范，而Hibernate实现了这个JPA规范，所以官方默认使用的是Hibernate，但就现在而言，在实际开发中，主流的还是使用同样实现了JPA规范的Mybatis
+
+②创建数据库、表字段
+
+```sql
+create database test;
+
+use test;
+CREATE TABLE category(
+  id int(11) NOT NULL AUTO_INCREMENT,
+  name varchar(30),
+  PRIMARY KEY (id)
+) DEFAULT CHARSET=UTF8;
+
+insert into category values
+        (null,'category 1'),
+        (null,'category 2'),
+        (null,'category 3'),
+        (null,'category 4');
+```
+
+③在application.properties设置相关的属性
+
+- jsp视图定位
+- 数据库连接的相关属性
+- 热部署（可选）
+
+```properties
+#jsp视图定位
+spring.mvc.view.prefix=/WEB-INF/JSP/
+spring.mvc.view.suffix=.jsp
+
+
+#连接数据库
+spring.dataSource.url=jdbc:mysql://127.0.0.1:3306/test?characterEncoding=utf-8
+spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+spring.datasource.username=root
+spring.datasource.password=ROOT
+spring.jpa.properties.hibernate.hbm2dd1.auto=update
+#spring.jpa.properties.hibernate.hbm2dd1.auto=update表示会自动更新数据表
+
+
+#热部署
+#1、缓存
+spring.thymeleaf.cache=true        
+#2、开启
+spring.devtools.restart.enabled=true   
+#3、监听目录
+spring.devtools.restart.additional-paths=src/main/java  
+```
+
+④在pom.xml中添加依赖
+
+- 增加对MySQL的依赖
+- 增加对JPA的依赖
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>2.1.4.RELEASE</version>
+        <relativePath/> <!-- lookup parent from repository -->
+    </parent>
+    <groupId>com.alexanderbai</groupId>
+    <artifactId>springboot</artifactId>
+    <version>0.0.1-SNAPSHOT</version>
+    <name>springboot</name>
+    <description>Demo project for Spring Boot</description>
+    <packaging>war</packaging>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>compile</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!--Servlet(jsp是Servlet）依赖-->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>servlet-api</artifactId>
+            <version>3.0</version>
+        </dependency>
+
+        <!--JSTL依赖-->
+        <dependency>
+            <groupId>jstl</groupId>
+            <artifactId>jstl</artifactId>
+            <version>1.2</version>
+        </dependency>
+
+        <!--Tomcat支持-->
+        <dependency>
+            <groupId>org.apache.tomcat.embed</groupId>
+            <artifactId>tomcat-embed-jasper</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-devtools</artifactId>
+            <optional>true</optional>   <!--这个需要为true热部署才有效-->
+        </dependency>
+
+        <!--MySQL依赖-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.43</version>
+        </dependency>
+
+        <!--JPA依赖-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>testCompile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+
+        </plugins>
+    </build>
+</project>
+```
+
+⑤POJO
+
+- **@Entity:表明这是一个实体类**
+- **@Table(name = "category")：表明对应的数据表是category**
+-  **@Id：表明主键**
+- **@GeneratedValue(strategy= GenerationType.IDENTITY)：表明主键由数据库控制，即自增**
+- **@Column(name = "id")：表明这是一个字段名为id的字段 ；@Column(name = "name")：表明这是一个字段名为name的字段**
+
+```java
+package com.alexanderbai.springboot.pojo;
+
+import javax.persistence.*;
+
+/**
+ * @Description TODO
+ * @Author AlexanderBai
+ * @Data 2019/4/28 9:07
+ **/
+@Entity
+@Table(name = "category")
+public class Category {
+
+    @Id
+    @GeneratedValue(strategy= GenerationType.IDENTITY)
+    @Column(name = "id")
+    private Integer id;
+
+    @Column(name = "name")
+    private String name;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+```
+
+⑥编写实现了JPA规范的DAO接口
+
+```java
+package com.alexanderbai.springboot.dao;
+
+import com.alexanderbai.springboot.pojo.Category;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+/**
+ * @Description TODO
+ * @Author AlexanderBai
+ * @Data 2019/4/28 9:13
+ **/
+public interface CategoryDAO extends JpaRepository<Category,Integer> {
+}
+```
+
+- 泛型<Category,Integer>表示这个是针对Category类的DAO，Integer表示主键是Integer类型
+
+- JpaRepository这个接口，提供了CRUD，分页等等一系列的数据库操作，可以直接使用
+
+- 简单看一下JpaRepository的源码
+
+  ```java
+  @NoRepositoryBean
+  public interface JpaRepository<T, ID> extends PagingAndSortingRepository<T, ID>, QueryByExampleExecutor<T> {
+  ```
+
+  ![1556421034530](assets/1556421034530.png)
+
+它的实现类
+
+```java
+@Repository
+@Transactional(readOnly = true)
+public class SimpleJpaRepository<T, ID> implements JpaRepositoryImplementation<T, ID> 
+```
+
+![1556421368103](assets/1556421368103.png)
+
+⑦建立对应的控制器
+
+- 接受listCategory映射
+- 获取所有的分类数据
+- 接着放入Model中
+- 跳转到listCategory.jsp
+
+```java
+package com.alexanderbai.springboot.web;
+
+import com.alexanderbai.springboot.dao.CategoryDAO;
+import com.alexanderbai.springboot.pojo.Category;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
+
+/**
+ * @Description TODO
+ * @Author AlexanderBai
+ * @Data 2019/4/28 9:17
+ **/
+@Controller
+public class CategoryController {
+    @Autowired
+    CategoryDAO categoryDAO;
+
+    @RequestMapping("/listCategory")
+    public String listCategory(Model model) {
+        List<Category> categoryList = categoryDAO.findAll();
+        model.addAttribute("categoryList", categoryList);
+        return "listCategory";
+    }
+}
+```
+
+⑧视图页面
+
+- 用JSTL遍历从CategoryController传递过来的集合：**categoryList**
+
+```jsp
+<%--
+  Created by IntelliJ IDEA.
+  User: AlexanderBai
+  Date: 2019/4/28
+  Time: 9:43
+  To change this template use File | Settings | File Templates.
+--%>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
+<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
+<html>
+<head>
+    <title>list category page</title>
+</head>
+<body>
+    <table align="center" border="1" cellspacing="0">
+        <tr>
+            <td>id</td>
+            <td>name</td>
+        </tr>
+        <c:forEach items="${categoryList}" var="category" varStatus="st">
+            <tr>
+                <td>${category.id}</td>
+                <td>${category.name}</td>
+            </tr>
+        </c:forEach>
+    </table>
+</body>
+</html>
+```
+
+⑨测试
+
+![1556422368066](assets/1556422368066.png)
+
+
+
+#### 2、Spring Boot MyBatis-注解方式
+
+在上一节的基础上：
+
+- 在pom,xml中添加依赖
+- 修改实体POJO
+- 新建CategoryMapper
+- 修改控制器
+- 测试
+
+
+
+①在pom,xml中添加依赖
+
+- 添加对MyBatis的依赖
+
+```xml
+<dependency>
+    <groupId>org.mybatis.spring.boot</groupId>
+    <artifactId>mybatis-spring-boot-starter</artifactId>
+    <version>1.3.0</version>
+</dependency>
+```
+
+②修改实体POJO
+
+```java
+package com.alexanderbai.springboot.pojo;
+
+/**
+ * @Description TODO
+ * @Author AlexanderBai
+ * @Data 2019/4/28 9:07
+ **/
+
+public class Category {
+    private Integer id;
+    private String name;
+
+    public Integer getId() {
+        return id;
+    }
+
+    public void setId(Integer id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+}
+```
+
+③新建CategoryMapper
+
+- @Mapper:表明这是一个MyBatis的Mapper接口
+- @Component：**表明把普通POJO实例化到Spring容器中，相当于配置文件中的`<bean id=" " class=" "/>`**
+-  @Select:表明调用findAll方法时会去执行对应的SQL语句
+
+```java
+package com.alexanderbai.springboot.mapper;
+
+import com.alexanderbai.springboot.pojo.Category;
+import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Select;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+/**
+ * @Description TODO
+ * @Author AlexanderBai
+ * @Data 2019/4/28 11:35
+ **/
+@Mapper
+@Component
+public interface CategoryMapper {
+    /**
+     * 执行对应的SQL语句
+     * @return List<Category>
+     */
+    @Select("select * from category")
+    List<Category> findAll();
+}
+```
+
+④修改控制器
+
+- 接受listCategory映射
+- 获取所有的分类数据
+- 接着放入Model中
+- 跳转到listCategory.jsp
+
+```java
+package com.alexanderbai.springboot.web;
+
+import com.alexanderbai.springboot.mapper.CategoryMapper;
+import com.alexanderbai.springboot.pojo.Category;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.List;
+
+/**
+ * @Description TODO
+ * @Author AlexanderBai
+ * @Data 2019/4/28 9:17
+ **/
+@Controller
+public class CategoryController {
+    @Autowired /**按类型自动装配bean */
+    CategoryMapper categoryMapper;
+
+    @RequestMapping("/listCategory")
+    public String listCategory(Model model) {
+        List<Category> categoryList = categoryMapper.findAll();
+        model.addAttribute("categoryList", categoryList);
+        return "listCategory";
+    }
+}
+```
+
+⑤测试
+
+![1556424793226](assets/1556424793226.png)
+
+####3、Spring Boot MyBatis-XML方式
+
+在原先的基础上：
+
+- 修改CategoryMapper
+- 新建Category.xml配置文件
+- 修改application.properties文件
+- 在pom.xml中添加资源依赖
+
+①修改CategoryMapper
+
+- 去掉了SQL的注解
+
+```java
+package com.alexanderbai.springboot.mapper;
+
+import com.alexanderbai.springboot.pojo.Category;
+import org.apache.ibatis.annotations.Mapper;
+import org.springframework.stereotype.Component;
+
+import java.util.List;
+
+/**
+ * @Description TODO
+ * @Author AlexanderBai
+ * @Data 2019/4/28 11:35
+ **/
+@Mapper
+@Component
+public interface CategoryMapper {
+    /**
+     * 执行对应的SQL语句
+     * @return List<Category>
+     */
+    List<Category> findAll();
+}
+```
+
+②新建Category.xml配置文件
+
+- Mapper类同级目录下新建Mapper配置文件
+- ![1556437619908](assets/1556437619908.png)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.alexanderbai.springboot.mapper.CategoryMapper">
+    <select id="findAll" resultType="com.alexanderbai.springboot.pojo.Category">
+            select * from category
+    </select>
+</mapper>
+```
+
+③修改application.properties文件
+
+- 指明去哪里查找xml配置文件，同时指定别名
+
+```properties
+mybatis.mapper-locations=classpath:com/alexanderbai/springboot/mapper/*.xml
+mybatis.type-aliases-package=com.alexanderbai.springboot.pojo
+```
+
+④在pom.xml中添加资源依赖
+
+- 指定在编译之后的字节码文件目录中，也生成需要的配置文件
+- ![1556438467835](assets/1556438467835.png)
+
+```xml
+	<build>
+        <resources>
+            <resource>
+                <directory>src/main/java</directory>
+                <includes>
+                    <include>**/*.xml</include>
+                </includes>
+            </resource>
+
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
+        </resources>
+    </build>
+```
 
 
 

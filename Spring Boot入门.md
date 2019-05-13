@@ -1253,6 +1253,16 @@ mybatis.type-aliases-package=com.alexanderbai.springboot.pojo
 
 ## 三、CRUD+分页
 
+#### 1、Spring Boot JPA
+
+
+
+#### 2、Spring Boot MyBatis
+
+
+
+####3、Spring Boot SQLite
+
 
 
 ## 四、Thymeleaf
